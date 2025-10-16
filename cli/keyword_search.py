@@ -5,7 +5,7 @@ def kw_search(query):
     movies = json.load(movie_file)
     results = []
     for m in movies["movies"]:
-        if query in m["title"]:
+        if query.lower() in m["title"].lower():
             results.append(m)
     results.sort(key=lambda x: x["id"])
     return results[:5]
