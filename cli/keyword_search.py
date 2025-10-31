@@ -1,5 +1,7 @@
 import json
 import string
+from nltk.stem import PorterStemmer
+from tools.tokenization import tokenize
 
 def kw_search(query):
     movies = None
@@ -9,21 +11,18 @@ def kw_search(query):
     with open("data/stopwords.txt") as stop_file:
         content = stop_file.read()
         stop_words = content.splitlines()
+    stemmer = PorterStemmer()
     punc_map = {}
     for p in string.punctuation:
         punc_map[p] = None
     translator = str.maketrans(punc_map)
     results = []
-    split = query.lower().translate(translator).split(" ")
-    refined = []
-    idx = 0
-    for s in split:
-        if len(s) > 1 and s not in stop_words:
-            refined.append(s)
-            idx += 1
+    refined = tokenize(query, stop_words, translator, stemmer)
     for m in movies["movies"]:
+        m_refined = tokenize(m["title"], stop_words, translator, stemmer)
+        movie = " ".join(m_refined)
         for word in refined:
-            if word in m["title"].lower().translate(translator):
+            if word in movie:
                 results.append(m)
                 break
     results.sort(key=lambda x: x["id"])
