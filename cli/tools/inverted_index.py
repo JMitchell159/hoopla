@@ -23,7 +23,9 @@ class InvertedIndex:
             self.index[word].sort()
     
     def get_documents(self, term):
-        return self.index[term.lower()]
+        if term in self.index:
+            return self.index[term.lower()]
+        return None
     
     def build(self):
         for m in self.movies["movies"]:
@@ -36,4 +38,12 @@ class InvertedIndex:
         with open("cache/index.pkl", "wb") as index_file:
             pickle.dump(self.index, index_file)
         with open("cache/docmap.pkl", "wb") as docmap_file:
-            pickle.dump(self.index, docmap_file)
+            pickle.dump(self.docmap, docmap_file)
+    
+    def load(self):
+        if not os.path.exists("cache/index.pkl") or not os.path.exists("cache/docmap.pkl"):
+            raise FileNotFoundError()
+        with open("cache/index.pkl", "rb") as index_file:
+            self.index = pickle.load(index_file)
+        with open("cache/docmap.pkl", "rb") as docmap_file:
+            self.docmap = pickle.load(docmap_file)

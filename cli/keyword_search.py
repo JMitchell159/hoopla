@@ -2,28 +2,32 @@ import json
 import string
 from nltk.stem import PorterStemmer
 from tools.tokenization import tokenize
+from tools.inverted_index import InvertedIndex
+import os
 
 def kw_search(query):
-    movies = None
-    stop_words = []
-    with open("data/movies.json") as movie_file:
-        movies = json.load(movie_file)
-    with open("data/stopwords.txt") as stop_file:
-        content = stop_file.read()
-        stop_words = content.splitlines()
-    stemmer = PorterStemmer()
-    punc_map = {}
-    for p in string.punctuation:
-        punc_map[p] = None
-    translator = str.maketrans(punc_map)
-    results = []
-    refined = tokenize(query, stop_words, translator, stemmer)
-    for m in movies["movies"]:
-        m_refined = tokenize(m["title"], stop_words, translator, stemmer)
-        movie = " ".join(m_refined)
-        for word in refined:
-            if word in movie:
-                results.append(m)
+    inv_idx = InvertedIndex()
+    try:
+        inv_idx.load()
+    except FileNotFoundError:
+        print("index and/or docmap files do not exist.")
+        os.exit(1)
+    tokens = tokenize(query, inv_idx.stop_words, inv_idx.translator, inv_idx.stemmer)
+    idx_result = []
+    done = False
+    for t in tokens:
+        doc_ids = inv_idx.get_documents(t)
+        if doc_ids is not None:
+            for idx in doc_ids:
+                if idx not in idx_result:
+                    idx_result.append(idx)
+                if len(idx_result) == 5:
+                    done = True
+                    break
+            if done:
+                idx_result.sort()
                 break
-    results.sort(key=lambda x: x["id"])
-    return results[:5]
+    result = []
+    for idx in idx_result:
+        result.append(inv_idx.docmap[idx])
+    return result

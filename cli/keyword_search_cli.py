@@ -22,7 +22,9 @@ def main() -> None:
             for i, r in enumerate(result):
                 print(f"{i+1}. {r["title"]}")
         case "build":
+            print("Building inverted index...")
             build()
+            print("Finished")
         case _:
             parser.print_help()
 
