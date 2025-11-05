@@ -3,6 +3,7 @@
 import argparse
 from keyword_search import kw_search
 from tools.inverted_index import InvertedIndex
+import math
 
 inv_idx = InvertedIndex()
 
@@ -18,6 +19,9 @@ def main() -> None:
     tf_parser = subparsers.add_parser("tf", help="Gives the term frequency of a single-token term in a document")
     tf_parser.add_argument("doc_id", type=str, help="Document ID")
     tf_parser.add_argument("term", type=str, help="Search term")
+
+    idf_parser = subparsers.add_parser("idf", help="Gives the inverse document frequency of a single-token term in a document")
+    idf_parser.add_argument("term", type=str, help="search term")
 
     args = parser.parse_args()
 
@@ -37,12 +41,19 @@ def main() -> None:
                 print(inv_idx.get_tf(args.doc_id, args.term))
             except Exception as e:
                 print(e)
+        case "idf":
+            inv_freq = idf(args.term)
+            print(f"Inverse document frequency of '{args.term}': {inv_freq:.2f}")
         case _:
             parser.print_help()
 
 def build():
     inv_idx.build()
     inv_idx.save()
+
+def idf(term):
+    inv_idx.load()
+    return inv_idx.get_idf(term)
 
 if __name__ == "__main__":
     main()

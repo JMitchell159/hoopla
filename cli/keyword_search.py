@@ -17,7 +17,7 @@ def kw_search(query):
     done = False
     for t in tokens:
         doc_ids = inv_idx.get_documents(t)
-        if doc_ids is not None:
+        if len(doc_ids) > 0:
             for idx in doc_ids:
                 if idx not in idx_result:
                     idx_result.append(idx)
