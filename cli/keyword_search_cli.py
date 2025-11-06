@@ -4,6 +4,7 @@ import argparse
 from keyword_search import kw_search
 from tools.inverted_index import InvertedIndex
 import math
+from tools.load_data import BM25_K1
 
 inv_idx = InvertedIndex()
 
@@ -19,6 +20,11 @@ def main() -> None:
     tf_parser = subparsers.add_parser("tf", help="Get the term frequency of a single-token term in a document")
     tf_parser.add_argument("doc_id", type=int, help="Document ID")
     tf_parser.add_argument("term", type=str, help="Term to get TF score for")
+
+    bm25tf_parser = subparsers.add_parser("bm25tf", help="Get BM25 TF score for a given document ID and term")
+    bm25tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    bm25tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
+    bm25tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
 
     idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency of a single-token term in the dataset")
     idf_parser.add_argument("term", type=str, help="Term to get IDF score for")
@@ -46,6 +52,13 @@ def main() -> None:
             inv_idx.load()
             try:
                 print(inv_idx.get_tf(args.doc_id, args.term))
+            except ValueError as e:
+                print(e)
+        case "bm25tf":
+            inv_idx.load()
+            try:
+                bm25 = inv_idx.get_bm25_tf(args.doc_id, args.term, args.k1)
+                print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25:.2f}")
             except ValueError as e:
                 print(e)
         case "idf":
@@ -86,6 +99,9 @@ def bm25idf(term: str) -> float:
 
 def tf(doc_id: int, term: str) -> int:
     return inv_idx.get_tf(doc_id, term)
+
+def bm25tf(doc_id: int, term: str, k1: float) -> float:
+    return inv_idx.get_bm25_tf(doc_id, term, k1)
 
 if __name__ == "__main__":
     main()

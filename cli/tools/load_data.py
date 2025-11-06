@@ -1,6 +1,8 @@
 import json
 import string
 
+BM25_K1 = 1.5
+
 def load_movies():
     movies = None
     with open("data/movies.json") as movie_file:

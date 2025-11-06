@@ -1,4 +1,4 @@
-from tools.load_data import load_stop_words, load_translator, load_movies
+from tools.load_data import load_stop_words, load_translator, load_movies, BM25_K1
 from tools.tokenization import tokenize
 import math
 from nltk.stem import PorterStemmer
@@ -32,6 +32,14 @@ class InvertedIndex:
             raise ValueError("term must be a single token")
         word = words[0]
         return self.term_frequencies[doc_id][word]
+    
+    def get_bm25_tf(self, doc_id: int, term: str, k1 = BM25_K1) -> float:
+        words = tokenize(term, self.stop_words, self.translator, self.stemmer)
+        if len(words) != 1:
+            raise ValueError("term must be a single token")
+        word = words[0]
+        tf = self.term_frequencies[doc_id][word]
+        return (tf * (k1 + 1)) / (tf + k1)
     
     def get_idf(self, term: str) -> float:
         words = tokenize(term, self.stop_words, self.translator, self.stemmer)
