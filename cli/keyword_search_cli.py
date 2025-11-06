@@ -16,16 +16,19 @@ def main() -> None:
 
     build_parser = subparsers.add_parser("build", help="Builds the inverted index for fast search")
 
-    tf_parser = subparsers.add_parser("tf", help="Gives the term frequency of a single-token term in a document")
+    tf_parser = subparsers.add_parser("tf", help="Get the term frequency of a single-token term in a document")
     tf_parser.add_argument("doc_id", type=int, help="Document ID")
-    tf_parser.add_argument("term", type=str, help="Search term")
+    tf_parser.add_argument("term", type=str, help="Term to get TF score for")
 
-    idf_parser = subparsers.add_parser("idf", help="Gives the inverse document frequency of a single-token term in the dataset")
-    idf_parser.add_argument("term", type=str, help="Search term")
+    idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency of a single-token term in the dataset")
+    idf_parser.add_argument("term", type=str, help="Term to get IDF score for")
+
+    bm25idf_parser = subparsers.add_parser("bm25idf", help="Get BM25 IDF score for a given term")
+    bm25idf_parser.add_argument("term", type=str, help="Term to get BM25 IDF score for")
 
     tfidf_parser = subparsers.add_parser("tfidf", help="Gives the combined term frequency-inverse document frequency of a single-token term in a document")
     tfidf_parser.add_argument("doc_id", type=int, help="Document ID")
-    tfidf_parser.add_argument("term", type=str, help="Search term")
+    tfidf_parser.add_argument("term", type=str, help="Term to get TF-IDF score for")
 
     args = parser.parse_args()
 
@@ -52,6 +55,13 @@ def main() -> None:
                 print(f"Inverse document frequency of '{args.term}': {inv_freq:.2f}")
             except ValueError as e:
                 print(e)
+        case "bm25idf":
+            inv_idx.load()
+            try:
+                bm25 = bm25idf(args.term)
+                print(f"BM25 IDF score of '{args.term}': {bm25:.2f}")
+            except ValueError as e:
+                print(e)
         case "tfidf":
             inv_idx.load()
             try:
@@ -68,10 +78,13 @@ def build():
     inv_idx.build()
     inv_idx.save()
 
-def idf(term):
+def idf(term: str) -> float:
     return inv_idx.get_idf(term)
 
-def tf(doc_id, term):
+def bm25idf(term: str) -> float:
+    return inv_idx.get_bm25_idf(term)
+
+def tf(doc_id: int, term: str) -> int:
     return inv_idx.get_tf(doc_id, term)
 
 if __name__ == "__main__":

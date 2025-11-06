@@ -1,6 +1,6 @@
 import string
 
-def tokenize(text, stop_words, translator, stemmer):
+def tokenize(text, stop_words: list[str], translator, stemmer) -> list[str]:
     split = text.lower().translate(translator).split()
     result = []
     for s in split:
