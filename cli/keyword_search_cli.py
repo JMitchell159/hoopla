@@ -17,11 +17,15 @@ def main() -> None:
     build_parser = subparsers.add_parser("build", help="Builds the inverted index for fast search")
 
     tf_parser = subparsers.add_parser("tf", help="Gives the term frequency of a single-token term in a document")
-    tf_parser.add_argument("doc_id", type=str, help="Document ID")
+    tf_parser.add_argument("doc_id", type=int, help="Document ID")
     tf_parser.add_argument("term", type=str, help="Search term")
 
-    idf_parser = subparsers.add_parser("idf", help="Gives the inverse document frequency of a single-token term in a document")
-    idf_parser.add_argument("term", type=str, help="search term")
+    idf_parser = subparsers.add_parser("idf", help="Gives the inverse document frequency of a single-token term in the dataset")
+    idf_parser.add_argument("term", type=str, help="Search term")
+
+    tfidf_parser = subparsers.add_parser("tfidf", help="Gives the combined term frequency-inverse document frequency of a single-token term in a document")
+    tfidf_parser.add_argument("doc_id", type=int, help="Document ID")
+    tfidf_parser.add_argument("term", type=str, help="Search term")
 
     args = parser.parse_args()
 
@@ -39,11 +43,24 @@ def main() -> None:
             inv_idx.load()
             try:
                 print(inv_idx.get_tf(args.doc_id, args.term))
-            except Exception as e:
+            except ValueError as e:
                 print(e)
         case "idf":
-            inv_freq = idf(args.term)
-            print(f"Inverse document frequency of '{args.term}': {inv_freq:.2f}")
+            inv_idx.load()
+            try:
+                inv_freq = idf(args.term)
+                print(f"Inverse document frequency of '{args.term}': {inv_freq:.2f}")
+            except ValueError as e:
+                print(e)
+        case "tfidf":
+            inv_idx.load()
+            try:
+                inv_freq = idf(args.term)
+                term_freq = tf(args.doc_id, args.term)
+                tf_idf = inv_freq * term_freq
+                print(f"TF-IDF score of '{args.term}' in document '{args.doc_id}': {tf_idf:.2f}")
+            except ValueError as e:
+                print(e)
         case _:
             parser.print_help()
 
@@ -52,8 +69,10 @@ def build():
     inv_idx.save()
 
 def idf(term):
-    inv_idx.load()
     return inv_idx.get_idf(term)
+
+def tf(doc_id, term):
+    return inv_idx.get_tf(doc_id, term)
 
 if __name__ == "__main__":
     main()

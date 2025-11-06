@@ -26,7 +26,7 @@ class InvertedIndex:
         doc_ids = self.index.get(term, set())
         return sorted(list(doc_ids))
     
-    def get_tf(self, doc_id: str, term: str) -> int:
+    def get_tf(self, doc_id: int, term: str) -> int:
         words = tokenize(term, self.stop_words, self.translator, self.stemmer)
         if len(words) != 1:
             raise ValueError("term must be a single token")
@@ -41,6 +41,11 @@ class InvertedIndex:
         doc_count = len(self.docmap)
         term_doc_count = len(self.index[word])
         return math.log((doc_count + 1) / (term_doc_count + 1))
+    
+    def get_tf_idf(self, doc_id: int, term: str) -> float:
+        tf = self.get_tf(doc_id, term)
+        idf = self.get_idf(term)
+        return tf * idf
     
     def build(self):
         for m in self.movies["movies"]:
