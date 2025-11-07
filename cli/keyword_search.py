@@ -5,7 +5,7 @@ from tools.tokenization import tokenize
 from tools.inverted_index import InvertedIndex
 import os
 
-def kw_search(query):
+def kw_search(query: str):
     inv_idx = InvertedIndex()
     try:
         inv_idx.load()

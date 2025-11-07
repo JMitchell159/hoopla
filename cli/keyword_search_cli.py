@@ -4,7 +4,7 @@ import argparse
 from keyword_search import kw_search
 from tools.inverted_index import InvertedIndex
 import math
-from tools.load_data import BM25_K1
+from tools.load_data import BM25_K1, BM25_B
 
 inv_idx = InvertedIndex()
 
@@ -14,6 +14,9 @@ def main() -> None:
 
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
+
+    bm25search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25search_parser.add_argument("query", type=str, help="Search query")
 
     build_parser = subparsers.add_parser("build", help="Builds the inverted index for fast search")
 
@@ -25,6 +28,7 @@ def main() -> None:
     bm25tf_parser.add_argument("doc_id", type=int, help="Document ID")
     bm25tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
     bm25tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
+    bm25tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 b parameter")
 
     idf_parser = subparsers.add_parser("idf", help="Get the inverse document frequency of a single-token term in the dataset")
     idf_parser.add_argument("term", type=str, help="Term to get IDF score for")
@@ -44,6 +48,12 @@ def main() -> None:
             result = kw_search(args.query)
             for i, r in enumerate(result):
                 print(f"{i+1}. {r["title"]}")
+        case "bm25search":
+            inv_idx.load()
+            print(f"Searching for: {args.query}")
+            result = inv_idx.bm25_search(args.query, 5)
+            for i, r in enumerate(result):
+                print(f"{i + 1}. ({r[0]['id']}) {r[0]['title']} - Score: {r[1]:.2f}")
         case "build":
             print("Building inverted index...")
             build()
@@ -57,7 +67,7 @@ def main() -> None:
         case "bm25tf":
             inv_idx.load()
             try:
-                bm25 = inv_idx.get_bm25_tf(args.doc_id, args.term, args.k1)
+                bm25 = inv_idx.get_bm25_tf(args.doc_id, args.term, args.k1, args.b)
                 print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25:.2f}")
             except ValueError as e:
                 print(e)
@@ -100,8 +110,8 @@ def bm25idf(term: str) -> float:
 def tf(doc_id: int, term: str) -> int:
     return inv_idx.get_tf(doc_id, term)
 
-def bm25tf(doc_id: int, term: str, k1: float) -> float:
-    return inv_idx.get_bm25_tf(doc_id, term, k1)
+def bm25tf(doc_id: int, term: str, k1: float, b: float) -> float:
+    return inv_idx.get_bm25_tf(doc_id, term, k1, b)
 
 if __name__ == "__main__":
     main()
